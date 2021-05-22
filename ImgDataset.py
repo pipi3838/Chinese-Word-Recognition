@@ -55,6 +55,51 @@ class ImgDataset(Dataset):
     def __len__(self):
         return len(self.labels)
 
+class EffiDataset(Dataset):
+    def __init__(self, dir_path, word2label=None, transform=None):
+        super(EffiDataset, self).__init__()
+        self.image_files = []
+        self.labels = []
+        self.words = []
+        self.ids = []
+        # Standard Preprocessing
+        if transform is None:
+            self.transform = transforms.Compose([
+                transforms.Resize((50, 50)),
+                # transforms.Grayscale(),
+                # lambda x: 1 - x,
+                # transforms.Normalize(mean=[0.5], std=[0.5]),
+                # transforms.RandomRotation([-20, 20]),
+                # transforms.RandomResizedCrop((50, 50), scale=(0.7,1.0)),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
+        else: self.transform = transform
+
+        # word2label = defaultdict(lambda: len(word2label))
+        for file in glob(os.path.join(dir_path, '*.jpg')):
+            self.image_files.append(str(file))
+            file_id = file.split('/')[-1]
+            label = str(file_id[-5])
+            # print('label ', label)
+            self.labels.append(word2label[label])
+            self.words.append(label) 
+            self.ids.append(file_id)
+        self.labels = torch.LongTensor(self.labels)
+        # with open('./word2label.json', 'w', encoding='utf-8') as writer:
+        #     writer.write(json.dumps(word2label, indent=4) + "\n")
+
+    def __getitem__(self, idx):
+        # img = Image.open(self.image_files[idx])
+        img = Image.open(self.image_files[idx])
+        img = self.transform(img)
+        sample = {"image": img, "label": self.labels[idx], "word": self.words[idx], "file_id": self.ids[idx]}
+        
+        return sample
+
+    def __len__(self):
+        return len(self.labels)
 
 class TransferImgDataset(Dataset):
     def __init__(self, dir_path, word2label=None):

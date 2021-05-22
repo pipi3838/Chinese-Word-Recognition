@@ -21,6 +21,8 @@ from tqdm import tqdm
 seed = 5487
 batch_size = 128
 device = 'cuda:0'
+if not torch.cuda.is_available(): device='cpu'
+
 load_model_path = '/nfs/nas-5.1/wbcheng/CWR_models/Desnet_All/{2}_loss.pth'
 torch.manual_seed(seed)
 np.random.seed(seed)
